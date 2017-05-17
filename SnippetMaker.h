@@ -29,7 +29,7 @@ private:
 
     vector<double> calculateWordIdf(const vector<string> &words, long totalDocumentCount) const;
 
-    double computeSentenceScore(const vector<string> &words, const vector<double> &wordIdf, Sentence *sentence) const;
+    double computeSentenceScore(const vector<string> &queryWords, const vector<double> &wordIdf, Sentence *sentence) const;
 
     vector<double> computeSentenceScores(const vector<string> &words,
                                          const vector<Sentence *> &allSentences,

@@ -19,6 +19,7 @@ SnippetMaker::SnippetMaker(std::istream &istream) : istream(istream) {
 }
 
 vector<string> SnippetMaker::getSnippetFragments(string query, unsigned fragmentCount) {
+    std::transform(query.begin(), query.end(), query.begin(), ::tolower);
     auto words = split(query, {' ', ',', '.', '/', '\\', '!', '?'});
     auto totalSentenceCount = index.getTotalSentenceCount();
     vector<Sentence *> allSentences = collectSentences(words);
@@ -66,14 +67,18 @@ vector<double> SnippetMaker::computeSentenceScores(const vector<string> &words, 
     return sentenceScores;
 }
 
-double SnippetMaker::computeSentenceScore(const vector<string> &words, const vector<double> &wordIdf,
+double SnippetMaker::computeSentenceScore(const vector<string> &queryWords, const vector<double> &wordIdf,
                                           Sentence *sentence) const {
     double sentenceScore = 0;
-    for (int j = 0; j < words.size(); ++j) {
-        auto word = words[j];
-        auto sentenceTermFrequency = sentence->wordToFrequency[word];
-        auto totalSentenceTermCount = sentence->totalCount();
-        auto tf = log((double) sentenceTermFrequency / totalSentenceTermCount) + 1;
+    for (int j = 0; j < queryWords.size(); ++j) {
+        auto queryWord = queryWords[j];
+        auto sentenceTermFrequency = sentence->wordToFrequency[queryWord];
+        double tf;
+        if(sentenceTermFrequency == 0) {
+            tf = 0;
+        } else {
+            tf = log((double) sentenceTermFrequency) + 1;
+        }
         auto idf = wordIdf[j];
         auto tfIdf = tf * idf;
         sentenceScore += tfIdf;
@@ -91,7 +96,8 @@ vector<double> SnippetMaker::calculateWordIdf(const vector<string> &words, long 
             wordIdf.push_back(0);
             continue;
         }
-        wordIdf.push_back(log((double) totalDocumentCount / documentFrequency) + 1);
+        auto idf = log((double) totalDocumentCount / documentFrequency);
+        wordIdf.push_back(idf);
     }
     return wordIdf;
 }
